@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MCQ OMR Sheet</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .question {
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      position: relative;
+    }
+    .options {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 10px;
+    }
+    .correct {
+      background-color: #c8e6c9;
+    }
+    .incorrect {
+      background-color: #ffcdd2;
+    }
+    .score {
+      font-weight: bold;
+      font-size: 20px;
+      margin-top: 20px;
+    }
+    .fly-score {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: #333;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      opacity: 1;
+      transition: transform 1s ease-out, opacity 1s ease-out;
+      z-index: 10;
+    }
+    .fly-out {
+      transform: translateY(-40px);
+      opacity: 0;
+    }
+    #answerInput {
+      width: 100%;
+      height: 100px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MCQ OMR Sheet (15 Questions)</h1>
+  <textarea id="answerInput" placeholder="Paste your answer JSON here..."></textarea>
+  <button onclick="loadAnswers()">Load Answers</button>
+  <form id="omrForm">
+    <div id="questions"></div>
+  </form>
+  <div class="score" id="scoreDisplay"></div>
+
+  <script>
+    const totalQuestions = 15;
+    const questionsContainer = document.getElementById("questions");
+    let score = 0;
+    let correctAnswers = {};
+    const markedQuestions = new Set();
+    const optionLabels = ['A', 'B', 'C', 'D'];
+
+    function loadAnswers() {
+      try {
+        const input = document.getElementById("answerInput").value;
+        const data = JSON.parse(input);
+        correctAnswers = data.answers || {};
+        resetForm();
+      } catch (e) {
+        alert("Invalid JSON input");
+      }
+    }
+
+    function resetForm() {
+      score = 0;
+      markedQuestions.clear();
+      questionsContainer.innerHTML = '';
+      updateScoreDisplay();
+      renderQuestions();
+    }
+
+    function renderQuestions() {
+      for (let i = 0; i < totalQuestions; i++) {
+        const qDiv = document.createElement("div");
+        qDiv.classList.add("question");
+        qDiv.setAttribute("data-question-id", i);
+
+        let optionsHTML = '';
+        for (let j = 0; j < 4; j++) {
+          optionsHTML += `
+            <label>
+              <input type="radio" name="q${i}" value="${j}" onchange="handleSelection(${i}, ${j})" /> ${optionLabels[j]}
+            </label>
+          `;
+        }
+
+        qDiv.innerHTML = `
+          <p>Question ${i + 1}</p>
+          <div class="options">${optionsHTML}</div>
+        `;
+
+        questionsContainer.appendChild(qDiv);
+      }
+    }
+
+    function handleSelection(index, selectedIndex) {
+      const questionDiv = document.querySelector(`[data-question-id='${index}']`);
+      if (markedQuestions.has(index)) return;
+
+      const correctLabel = correctAnswers[index + 1];
+      if (!correctLabel) return;
+
+      const correctIndex = optionLabels.indexOf(correctLabel);
+      let scoreChange = 0;
+
+      if (selectedIndex === correctIndex) {
+        questionDiv.classList.add("correct");
+        scoreChange = 1;
+      } else {
+        questionDiv.classList.add("incorrect");
+        scoreChange = -1 / 3;
+      }
+
+      markedQuestions.add(index);
+      score += scoreChange;
+      updateScoreDisplay();
+      flyScore(questionDiv, scoreChange);
+    }
+
+    function updateScoreDisplay() {
+      document.getElementById("scoreDisplay").innerText = `Your Score: ${score.toFixed(2)}/${totalQuestions}`;
+    }
+
+    function flyScore(container, change) {
+      const fly = document.createElement("div");
+      fly.className = "fly-score";
+      fly.innerText = (change > 0 ? "+" : "") + change.toFixed(2);
+      container.appendChild(fly);
+
+      setTimeout(() => fly.classList.add("fly-out"), 50);
+      setTimeout(() => fly.remove(), 1050);
+    }
+
+    renderQuestions();
+  </script>
+</body>
