@@ -56,7 +56,19 @@
   </style>
 </head>
 <body>
-  <h1>MCQ OMR Sheet (15 Questions)</h1>
+  <h1>MCQ OMR Sheet</h1>
+  <label for="questionCount">Number of Questions:</label>
+  <select id="questionCount" onchange="saveQuestionCount()">
+    <option value="10">10</option>
+    <option value="15">15</option>
+    <option value="20">20</option>
+    <option value="25">25</option>
+    <option value="30">30</option>
+    <option value="35">35</option>
+    <option value="40">40</option>
+    <option value="45">45</option>
+    <option value="50">50</option>
+  </select>
   <textarea id="answerInput" placeholder="Paste your answer JSON here..."></textarea>
   <button onclick="loadAnswers()">Load Answers</button>
   <form id="omrForm">
@@ -65,12 +77,27 @@
   <div class="score" id="scoreDisplay"></div>
 
   <script>
-    const totalQuestions = 15;
     const questionsContainer = document.getElementById("questions");
+    const questionCountDropdown = document.getElementById("questionCount");
     let score = 0;
+    let totalQuestions = getSavedQuestionCount();
     let correctAnswers = {};
     const markedQuestions = new Set();
     const optionLabels = ['A', 'B', 'C', 'D'];
+
+    questionCountDropdown.value = totalQuestions;
+
+    function getSavedQuestionCount() {
+      const match = document.cookie.match(/questionCount=(\d+)/);
+      return match ? parseInt(match[1]) : 15;
+    }
+
+    function saveQuestionCount() {
+      const count = parseInt(questionCountDropdown.value);
+      document.cookie = `questionCount=${count};path=/;max-age=31536000`;
+      totalQuestions = count;
+      resetForm();
+    }
 
     function loadAnswers() {
       try {
@@ -156,3 +183,4 @@
     renderQuestions();
   </script>
 </body>
+</html>
